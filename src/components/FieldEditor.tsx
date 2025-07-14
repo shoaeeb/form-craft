@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+
 import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -232,8 +232,9 @@ export function FieldEditor() {
                 value={field.conditional?.dependsOn || ''}
                 onChange={(e) => updateField(field.id, {
                   conditional: e.target.value ? {
-                    ...field.conditional,
-                    dependsOn: e.target.value
+                    dependsOn: e.target.value,
+                    condition: 'equals',
+                    value: ''
                   } : undefined
                 })}
               >
@@ -256,8 +257,9 @@ export function FieldEditor() {
                     value={field.conditional.condition}
                     onChange={(e) => updateField(field.id, {
                       conditional: {
-                        ...field.conditional,
-                        condition: e.target.value as any
+                        dependsOn: field.conditional!.dependsOn,
+                        condition: e.target.value as any,
+                        value: field.conditional!.value || ''
                       }
                     })}
                   >
@@ -277,7 +279,8 @@ export function FieldEditor() {
                       value={field.conditional.value || ''}
                       onChange={(e) => updateField(field.id, {
                         conditional: {
-                          ...field.conditional,
+                          dependsOn: field.conditional!.dependsOn,
+                          condition: field.conditional!.condition,
                           value: e.target.value
                         }
                       })}
