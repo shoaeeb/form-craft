@@ -34,7 +34,8 @@ export function FormCanvas() {
         <CardContent>
           <div
             ref={setNodeRef}
-            className="min-h-96 space-y-4 p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg"
+            className="space-y-4 p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg"
+            style={{ minHeight: schema.fields.length === 0 ? '400px' : `${Math.max(400, (schema.fields.length * 150) + 300)}px` }}
           >
             {schema.fields.length === 0 ? (
               <div className="text-center text-muted-foreground py-12">
