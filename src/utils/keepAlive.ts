@@ -1,6 +1,6 @@
 // Keep-alive utility to prevent Render from sleeping
 export class KeepAlive {
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: number | null = null;
   private readonly pingInterval = 14 * 60 * 1000; // 14 minutes (Render sleeps after 15 min)
 
   start() {
