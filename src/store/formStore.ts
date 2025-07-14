@@ -36,12 +36,35 @@ export const useFormStore = create<FormStore>((set, get) => ({
   currentStep: 0,
 
   addField: (field) =>
-    set((state) => ({
-      schema: {
-        ...state.schema,
-        fields: [...state.schema.fields, { ...field, id: generateId() }],
-      },
-    })),
+    set((state) => {
+      const newField = { ...field, id: generateId() };
+
+      if (
+        state.schema.isMultiStep &&
+        state.schema.steps &&
+        state.schema.steps.length > 0
+      ) {
+        // Add to current step
+        return {
+          schema: {
+            ...state.schema,
+            steps: state.schema.steps.map((step, index) =>
+              index === state.currentStep
+                ? { ...step, fields: [...step.fields, newField] }
+                : step
+            ),
+          },
+        };
+      } else {
+        // Add to main fields
+        return {
+          schema: {
+            ...state.schema,
+            fields: [...state.schema.fields, newField],
+          },
+        };
+      }
+    }),
 
   updateField: (id, updates) =>
     set((state) => ({
@@ -106,6 +129,12 @@ export const useFormStore = create<FormStore>((set, get) => ({
               },
             ]
           : [],
+        fields: state.schema.isMultiStep
+          ? state.schema.steps?.reduce(
+              (allFields, step) => [...allFields, ...step.fields],
+              [] as FormField[]
+            ) || []
+          : state.schema.fields,
       },
       currentStep: 0,
     })),
@@ -287,35 +316,6 @@ export default function ${schema.title.replace(/\s+/g, "")}Form() {
             : ""
         }
       </div>
-      
-      // Conditional field logic
-      const [formData, setFormData] = React.useState({});
-      
-      React.useEffect(() => {
-        const subscription = watch((value) => setFormData(value));
-        return () => subscription.unsubscribe();
-      }, [watch]);
-      
-      const shouldShowField = (fieldId) => {
-        ${schema.fields
-          .filter((f) => f.conditional)
-          .map(
-            (f) => `if (fieldId === '${f.id}') {
-          const dependentValue = formData['${f.conditional!.dependsOn}'];
-          ${
-            f.conditional!.condition === "equals"
-              ? `return dependentValue === '${f.conditional!.value}';`
-              : f.conditional!.condition === "not_equals"
-              ? `return dependentValue !== '${f.conditional!.value}';`
-              : f.conditional!.condition === "contains"
-              ? `return dependentValue?.includes('${f.conditional!.value}');`
-              : `return dependentValue && dependentValue.trim() !== '';`
-          }
-        }`
-          )
-          .join("\n        ")}
-        return true;
-      };
       
       ${schema.fields
         .map((field) => {

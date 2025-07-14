@@ -7,8 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export function FormCanvas() {
-  const { schema, updateSchema } = useFormStore();
+  const { schema, updateSchema, currentStep } = useFormStore();
   const { setNodeRef } = useDroppable({ id: 'form-canvas' });
+  
+  // Get current fields based on mode
+  const currentFields = schema.isMultiStep && schema.steps 
+    ? (schema.steps[currentStep]?.fields || [])
+    : schema.fields;
 
   return (
     <div className="flex-1 p-4">
@@ -35,15 +40,15 @@ export function FormCanvas() {
           <div
             ref={setNodeRef}
             className="space-y-4 p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg"
-            style={{ minHeight: schema.fields.length === 0 ? '400px' : `${Math.max(400, (schema.fields.length * 150) + 300)}px` }}
+            style={{ minHeight: currentFields.length === 0 ? '400px' : `${Math.max(400, (currentFields.length * 150) + 300)}px` }}
           >
-            {schema.fields.length === 0 ? (
+            {currentFields.length === 0 ? (
               <div className="text-center text-muted-foreground py-12">
-                <p>Drag fields from the palette to build your form</p>
+                <p>Drag fields from the palette to build your {schema.isMultiStep ? `step ${currentStep + 1}` : 'form'}</p>
               </div>
             ) : (
-              <SortableContext items={schema.fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-                {schema.fields.map((field) => (
+              <SortableContext items={currentFields.map(f => f.id)} strategy={verticalListSortingStrategy}>
+                {currentFields.map((field) => (
                   <SortableField key={field.id} field={field} />
                 ))}
               </SortableContext>
