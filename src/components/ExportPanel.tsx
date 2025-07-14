@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Download, Code, FileJson } from 'lucide-react';
 
 export function ExportPanel() {
-  const { exportSchema, exportReactComponent } = useFormStore();
+  const { exportSchema, exportReactComponent, regenerateFieldIds } = useFormStore();
   const [exportType, setExportType] = useState<'schema' | 'component'>('schema');
   const [exportContent, setExportContent] = useState('');
 
@@ -62,6 +62,14 @@ export function ExportPanel() {
           </Button>
         </div>
 
+        <Button
+          onClick={regenerateFieldIds}
+          variant="outline"
+          className="w-full"
+        >
+          Fix Field IDs
+        </Button>
+        
         <Button onClick={handleExport} className="w-full">
           Generate {exportType === 'schema' ? 'Schema' : 'Component'}
         </Button>

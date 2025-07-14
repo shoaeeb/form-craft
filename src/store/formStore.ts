@@ -19,6 +19,7 @@ interface FormStore {
   updateStep: (stepId: string, updates: Partial<FormStep>) => void;
   moveFieldToStep: (fieldId: string, stepId: string) => void;
   setCurrentStep: (step: number) => void;
+  regenerateFieldIds: () => void;
   exportSchema: () => FormSchema;
   exportReactComponent: () => string;
 }
@@ -37,7 +38,14 @@ export const useFormStore = create<FormStore>((set, get) => ({
 
   addField: (field) =>
     set((state) => {
-      const newField = { ...field, id: generateId() };
+      // Generate readable field name based on label
+      const fieldName = field.label
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '') || field.type;
+      
+      const newField = { ...field, id: fieldName };
 
       if (
         state.schema.isMultiStep &&
@@ -194,6 +202,20 @@ export const useFormStore = create<FormStore>((set, get) => ({
 
   setCurrentStep: (step) => set({ currentStep: step }),
 
+  regenerateFieldIds: () => set((state) => ({
+    schema: {
+      ...state.schema,
+      fields: state.schema.fields.map(field => ({
+        ...field,
+        id: field.label
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '_')
+          .replace(/_+/g, '_')
+          .replace(/^_|_$/g, '') || field.type
+      }))
+    }
+  })),
+
   exportSchema: () => get().schema,
 
   exportReactComponent: () => {
@@ -274,7 +296,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
             zodType = "z.string()";
         }
         if (!field.required) zodType += ".optional()";
-        return `  '${field.id}': ${zodType}`;
+        return `  ${field.id}: ${zodType}`;
       })
       .join(",\n")}\n});`;
 
@@ -338,9 +360,7 @@ export default function ${schema.title.replace(/\s+/g, "")}Form() {
           {...register('${field.id}', { required: ${field.required} })}
           className="w-full px-3 py-2 border rounded-md"
         />
-        {errors['${
-          field.id
-        }'] && <span className="text-red-500 text-sm">This field is required</span>}
+        {errors.${field.id} && <span className="text-red-500 text-sm">This field is required</span>}
       </div>`;
             case "textarea":
               return `<div>
@@ -351,9 +371,7 @@ export default function ${schema.title.replace(/\s+/g, "")}Form() {
           className="w-full px-3 py-2 border rounded-md"
           rows={4}
         />
-        {errors['${
-          field.id
-        }'] && <span className="text-red-500 text-sm">This field is required</span>}
+        {errors.${field.id} && <span className="text-red-500 text-sm">This field is required</span>}
       </div>`;
             case "select":
               return `<div>
@@ -367,9 +385,7 @@ export default function ${schema.title.replace(/\s+/g, "")}Form() {
             ?.map((opt) => `<option value="${opt}">${opt}</option>`)
             .join("\n          ")}
         </select>
-        {errors['${
-          field.id
-        }'] && <span className="text-red-500 text-sm">This field is required</span>}
+        {errors.${field.id} && <span className="text-red-500 text-sm">This field is required</span>}
       </div>`;
             case "checkbox":
               return `<div className="flex items-center space-x-2">
